@@ -1,0 +1,17 @@
+# Global ignores
+node_modules/
+.env
+dist/
+
+# Ignore client
+client/.next/
+client/node_modules/
+
+# Ignore server
+server/node_modules/
+server/dist/
+server/.env
+
+# Ignore docker volumes (MongoDB data)
+mongo_data/
+mongo_data/
