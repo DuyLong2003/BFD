@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { Category } from '../../categories/schemas/category.schema';
+import { User } from '../../users/schemas/user.schema';
 
 export type ArticleDocument = HydratedDocument<Article>;
 
@@ -18,12 +19,21 @@ export class Article {
     @Prop()
     thumbnail: string;
 
-    // Liên kết sang bảng Category
+    // Liên kết sang bảng Category, Một bài viết thuộc một Category
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Category' })
     category: Category;
 
-    @Prop({ default: 'Draft' }) // Trạng thái: Draft hoặc Published
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
+    author: User;
+
+    @Prop({ default: 'Draft', enum: ['Draft', 'Published'] }) // Trạng thái: Draft hoặc Published
     status: string;
 }
 
-export const ArticleSchema = SchemaFactory.createForClass(Article);
+const ArticleSchema = SchemaFactory.createForClass(Article);
+
+// TẠO INDEX TÌM KIẾM 
+// Cho phép tìm kiếm theo Title (trọng số cao) và Content (trọng số thấp hơn)
+ArticleSchema.index({ title: 'text', content: 'text' });
+
+export { ArticleSchema };
