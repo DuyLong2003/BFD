@@ -21,7 +21,11 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document); // Truy cập tại /docs
 
   // CORS
-  app.enableCors();
+  app.enableCors({
+    origin: "http://localhost:3000",
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true, // Cho phép gửi cookie/header xác thực
+  });
 
   await app.listen(process.env.PORT ?? 8080);
 }

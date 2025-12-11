@@ -1,22 +1,28 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Public } from 'src/decorator/customize';
+import { JwtAuthGuard } from 'src/auth/passport/jwt-auth.guard';
+
 
 @Controller('users')
+@UseGuards(JwtAuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 
-  @Public()
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  findAll(
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+    @Query('q') q: string,
+    @Query('sort') sort: string,
+  ) {
+    return this.usersService.findAll({ page, limit, q, sort });
   }
 
   @Get(':id')

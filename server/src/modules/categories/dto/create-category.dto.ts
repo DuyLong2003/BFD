@@ -5,7 +5,7 @@ export class CreateCategoryDto {
     @IsString()
     name: string;
 
-    @IsNotEmpty({ message: 'Slug không được để trống' })
+    @IsOptional()
     @IsString()
     slug: string;
 

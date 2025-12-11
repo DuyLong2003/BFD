@@ -14,7 +14,7 @@ services:
     volumes:
       - mongo_data:/data/db
 
-  # 2. Caching (Theo đề xuất mới)
+  # 2. Caching 
   redis:
     image: redis:alpine
     container_name: bfd_redis
@@ -24,7 +24,7 @@ services:
     volumes:
       - redis_data:/data
 
-  # 3. Object Storage (Thay thế lưu file local)
+  # 3. Object Storage
   minio:
     image: minio/minio
     container_name: bfd_minio

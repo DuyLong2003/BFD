@@ -24,6 +24,7 @@ export class AuthService {
     async login(user: any) {
         const payload = {
             username: user.username,
+            role: user.role,
             sub: user._id
         };
         return {
@@ -39,4 +40,6 @@ export class AuthService {
         return await this.usersService.handleRegister(registerDto);
 
     }
+
+
 }

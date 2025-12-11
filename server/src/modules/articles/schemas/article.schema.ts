@@ -20,7 +20,7 @@ export class Article {
     thumbnail: string;
 
     // Liên kết sang bảng Category, Một bài viết thuộc một Category
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Category' })
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true })
     category: Category;
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })

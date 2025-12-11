@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { Public } from 'src/decorator/customize';
 
 @Controller('categories')
 export class CategoriesController {
@@ -12,11 +13,16 @@ export class CategoriesController {
     return this.categoriesService.create(createCategoryDto);
   }
 
+  @Public() // Cho phép public xem danh mục
   @Get()
-  findAll() {
-    return this.categoriesService.findAll();
+  findAll(
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+    @Query('q') q: string,
+    @Query('sort') sort: string,
+  ) {
+    return this.categoriesService.findAll({ page, limit, q, sort });
   }
-
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.categoriesService.findOne(id);

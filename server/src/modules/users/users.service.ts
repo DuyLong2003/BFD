@@ -7,11 +7,14 @@ import { isValidObjectId, Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { CreateAuthDto } from 'src/auth/dto/create-auth.dto';
 import { hashPasswordHelper } from 'src/helpers/util';
+import { EventsGateway } from 'src/events/events.gateway';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(User.name)
+    private userModel: Model<UserDocument>,
+    private eventsGateway: EventsGateway,
   ) { }
 
   async create(createUserDto: CreateUserDto) {
@@ -31,11 +34,48 @@ export class UsersService {
       password: hashedPassword,
     });
 
-    return newUser.save();
+    await newUser.save();
+
+    // bắn sự kiện
+    this.eventsGateway.emitNewUser(newUser);
+
+    return newUser;
   }
 
-  findAll() {
-    return this.userModel.find().select('-password').exec();
+  async findAll(query: { page?: string; limit?: string; q?: string; sort?: string }) {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const filter: any = {};
+
+    // Tìm kiếm theo Username HOẶC Email (Case insensitive)
+    if (query.q) {
+      filter.$or = [
+        { username: { $regex: query.q, $options: 'i' } },
+        { email: { $regex: query.q, $options: 'i' } }
+      ];
+    }
+
+    // Xử lý Sort
+    let sortConfig: any = { createdAt: -1 }; // Mặc định mới nhất lên đầu
+    if (query.sort) {
+      const isDesc = query.sort.startsWith('-');
+      const field = query.sort.replace('-', '');
+      sortConfig = { [field]: isDesc ? -1 : 1 };
+    }
+
+    const total = await this.userModel.countDocuments(filter);
+
+    const data = await this.userModel
+      .find(filter)
+      .select('-password') // Không trả về password
+      .sort(sortConfig)
+      .skip(skip)
+      .limit(limit)
+      .exec();
+
+    return { data, total };
   }
 
   async findOne(id: string) {
@@ -78,6 +118,10 @@ export class UsersService {
 
     const deletedUser = await this.userModel.findByIdAndDelete(_id).exec();
     if (!deletedUser) throw new NotFoundException('User không tồn tại');
+
+    if (deletedUser) {
+      this.eventsGateway.emitDeletedUser(_id);
+    }
 
     return deletedUser;
   }

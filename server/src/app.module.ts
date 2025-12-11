@@ -9,6 +9,10 @@ import { ArticlesModule } from './modules/articles/articles.module';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/passport/jwt-auth.guard';
+import { EventsGateway } from './events/events.gateway';
+import { DashboardModule } from './modules/dashboard/dashboard.modules';
+import { EventsModule } from './events/events.module';
+import { FilesModule } from './modules/files/files.module';
 
 @Module({
   imports: [
@@ -26,6 +30,9 @@ import { JwtAuthGuard } from './auth/passport/jwt-auth.guard';
     CategoriesModule,
     ArticlesModule,
     AuthModule,
+    DashboardModule,
+    EventsModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [
