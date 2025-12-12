@@ -17,7 +17,7 @@ export class User {
     @Prop({ default: 'admin' })
     role: string;
 
-    @Prop({ default: true }) // Thêm trạng thái hoạt động (để khóa nick thay vì xóa)
+    @Prop({ default: true })
     isActive: boolean;
 }
 

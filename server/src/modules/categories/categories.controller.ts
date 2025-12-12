@@ -23,6 +23,7 @@ export class CategoriesController {
   ) {
     return this.categoriesService.findAll({ page, limit, q, sort });
   }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.categoriesService.findOne(id);

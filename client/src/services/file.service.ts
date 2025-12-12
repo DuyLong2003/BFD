@@ -6,13 +6,15 @@ export interface UploadResponse {
 }
 
 export const fileService = {
-    upload: (file: File) => {
+    upload: async (file: File): Promise<UploadResponse> => {
         const formData = new FormData();
         formData.append('file', file);
-        return axiosClient.post<any, UploadResponse>('/files/upload', formData, {
+
+        // ✅ axiosClient tự động attach token từ cookie
+        return axiosClient.post('/files/upload', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
         });
-    }
+    },
 };

@@ -55,5 +55,9 @@ export const articleService = {
 
     updateArticle: (id: string, data: Partial<CreateArticleDto>) => {
         return axiosClient.patch(`/articles/${id}`, data);
-    }
+    },
+
+    getPublicArticles: (params?: { page?: number; limit?: number; category?: string }) => {
+        return axiosClient.get<any, { data: Article[], total: number }>('/articles', { params });
+    },
 };

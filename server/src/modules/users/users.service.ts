@@ -18,13 +18,12 @@ export class UsersService {
   ) { }
 
   async create(createUserDto: CreateUserDto) {
-    // Check trùng username trước
     const existUser = await this.userModel.findOne({ username: createUserDto.username });
     if (existUser) {
       throw new BadRequestException('Username đã tồn tại');
     }
 
-    // Mã hóa mật khẩu (Hashing)
+    // Mã hóa mật khẩu
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
 
@@ -36,7 +35,6 @@ export class UsersService {
 
     await newUser.save();
 
-    // bắn sự kiện
     this.eventsGateway.emitNewUser(newUser);
 
     return newUser;
@@ -49,7 +47,6 @@ export class UsersService {
 
     const filter: any = {};
 
-    // Tìm kiếm theo Username HOẶC Email (Case insensitive)
     if (query.q) {
       filter.$or = [
         { username: { $regex: query.q, $options: 'i' } },
@@ -57,8 +54,7 @@ export class UsersService {
       ];
     }
 
-    // Xử lý Sort
-    let sortConfig: any = { createdAt: -1 }; // Mặc định mới nhất lên đầu
+    let sortConfig: any = { createdAt: -1 };
     if (query.sort) {
       const isDesc = query.sort.startsWith('-');
       const field = query.sort.replace('-', '');
@@ -69,7 +65,7 @@ export class UsersService {
 
     const data = await this.userModel
       .find(filter)
-      .select('-password') // Không trả về password
+      .select('-password')
       .sort(sortConfig)
       .skip(skip)
       .limit(limit)
@@ -98,7 +94,6 @@ export class UsersService {
   async update(id: string, updateUserDto: UpdateUserDto) {
     if (!isValidObjectId(id)) throw new BadRequestException('ID User không hợp lệ');
 
-    // Nếu user update password thì phải hash lại
     if (updateUserDto.password) {
       const salt = await bcrypt.genSalt();
       updateUserDto.password = await bcrypt.hash(updateUserDto.password, salt);
@@ -139,10 +134,8 @@ export class UsersService {
       throw new BadRequestException(`Username đã tồn tại: ${username}. Vui lòng sửa dụng tên khác`)
     }
 
-    //hash password
     const hashPassword = await hashPasswordHelper(password);
 
-    //Lưu user vào MongoDB
     const user = await this.userModel.create({
       username, role, password: hashPassword,
     })

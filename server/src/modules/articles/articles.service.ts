@@ -7,6 +7,7 @@ import { isValidObjectId, Model } from 'mongoose';
 import slugify from 'slugify';
 import { EventsGateway } from 'src/events/events.gateway';
 import { User } from '../users/schemas/user.schema';
+import { FilesService } from '../files/files.service';
 
 @Injectable()
 export class ArticlesService {
@@ -14,6 +15,7 @@ export class ArticlesService {
     @InjectModel(Article.name)
     private articleModel: Model<ArticleDocument>,
     private eventsGateway: EventsGateway,
+    private filesService: FilesService, // 
   ) { }
 
   async create(createArticleDto: CreateArticleDto, user: User & { _id: string }) {
@@ -22,21 +24,44 @@ export class ArticlesService {
       createArticleDto.slug = slugify(createArticleDto.title, { lower: true, locale: 'vi' });
     }
 
-    // Xử lý trùng lặp Slug -> thêm timestamp -> VD: tin-tuc -> tin-tuc-170123456
+    // Xử lý trùng lặp Slug
     const slugExists = await this.articleModel.findOne({ slug: createArticleDto.slug });
     if (slugExists) {
       createArticleDto.slug = `${createArticleDto.slug}-${Date.now()}`;
     }
 
+    // Move thumbnail từ temp/ → articles/
+    if (createArticleDto.thumbnail) {
+      try {
+        createArticleDto.thumbnail = await this.filesService.moveFromTemp(
+          createArticleDto.thumbnail
+        );
+      } catch (error) {
+        console.error('Error moving thumbnail:', error);
+      }
+    }
+
+    // Extract và move tất cả ảnh trong content
+    if (createArticleDto.content) {
+      try {
+        const imageUrls = this.filesService.extractImageUrls(createArticleDto.content);
+
+        for (const url of imageUrls) {
+          const newUrl = await this.filesService.moveFromTemp(url);
+          createArticleDto.content = createArticleDto.content.replace(url, newUrl);
+        }
+      } catch (error) {
+        console.error('Error moving content images:', error);
+      }
+    }
+
     const createdArticle = new this.articleModel({
       ...createArticleDto,
-      // Nếu schema có trường author/user thì gán vào đây
       author: user._id
     });
 
     const newArticle = await createdArticle.save();
 
-    // Bắn socket
     this.eventsGateway.emitNewArticle(newArticle);
 
     return newArticle;
@@ -58,16 +83,11 @@ export class ArticlesService {
 
     const filter: Record<string, any> = {};
 
-    //LỌC
-    // Lọc theo chuyên mục
     if (query.category) filter.category = query.category;
-    // Lọc trạng thái
     if (query.status) filter.status = query.status;
-    // Tìm kiếm tiêu đề (Regex)
     if (query.q) {
       filter.title = { $regex: query.q, $options: 'i' };
     }
-    // Lọc theo ngày
     if (query.startDate && query.endDate) {
       filter.createdAt = {
         $gte: new Date(query.startDate),
@@ -75,12 +95,9 @@ export class ArticlesService {
       };
     }
 
-    //SORT
-    // Mặc định sort ngày tạo giảm dần
     let sortConfig: any = { createdAt: -1 };
 
     if (query.sort) {
-      // query.sort gửi lên dạng: "title" (tăng dần) hoặc "-title" (giảm dần)
       const isDesc = query.sort.startsWith('-');
       const field = query.sort.replace('-', '');
 
@@ -91,7 +108,6 @@ export class ArticlesService {
       }
     }
 
-    // Đếm tổng số bản ghi
     const total = await this.articleModel.countDocuments(filter);
 
     const data = await this.articleModel
@@ -113,7 +129,7 @@ export class ArticlesService {
 
     const article = await this.articleModel
       .findById(id)
-      .populate('category', 'name slug') // join bảng Category
+      .populate('category', 'name slug')
       .exec();
 
     if (!article) throw new NotFoundException('Bài viết không tồn tại');
@@ -121,21 +137,98 @@ export class ArticlesService {
   }
 
   async update(id: string, updateArticleDto: UpdateArticleDto) {
+    const existingArticle = await this.articleModel.findById(id);
+    if (!existingArticle) {
+      throw new NotFoundException('Không tìm thấy bài viết');
+    }
+
+    // Auto-generate slug nếu có title mới
     if (updateArticleDto.title && !updateArticleDto.slug) {
       updateArticleDto.slug = slugify(updateArticleDto.title, { lower: true, locale: 'vi' });
+    }
+
+    // Xử lý thumbnail
+    if (updateArticleDto.thumbnail && updateArticleDto.thumbnail !== existingArticle.thumbnail) {
+      try {
+        // Move thumbnail mới từ temp/ → articles/
+        updateArticleDto.thumbnail = await this.filesService.moveFromTemp(
+          updateArticleDto.thumbnail
+        );
+
+        // Xóa thumbnail cũ
+        if (existingArticle.thumbnail) {
+          await this.filesService.deleteFileByUrl(existingArticle.thumbnail);
+        }
+      } catch (error) {
+        console.error('Error updating thumbnail:', error);
+      }
+    }
+
+    // Xử lý ảnh trong content
+    if (updateArticleDto.content) {
+      try {
+        // Lấy ảnh mới trong content
+        const newImageUrls = this.filesService.extractImageUrls(updateArticleDto.content);
+
+        // Move ảnh mới từ temp/ → articles/
+        for (const url of newImageUrls) {
+          const newUrl = await this.filesService.moveFromTemp(url);
+          updateArticleDto.content = updateArticleDto.content.replace(url, newUrl);
+        }
+
+        // Lấy ảnh cũ trong content
+        const oldImageUrls = this.filesService.extractImageUrls(existingArticle.content || '');
+
+        // Xóa ảnh cũ không còn dùng nữa
+        const urlsToDelete = oldImageUrls.filter(
+          oldUrl => !newImageUrls.some(newUrl =>
+            newUrl === oldUrl || newUrl.replace('articles/', 'temp/') === oldUrl
+          )
+        );
+
+        for (const url of urlsToDelete) {
+          await this.filesService.deleteFileByUrl(url);
+        }
+      } catch (error) {
+        console.error('Error updating content images:', error);
+      }
     }
 
     const updated = await this.articleModel
       .findByIdAndUpdate(id, updateArticleDto, { new: true })
       .exec();
 
-    if (!updated) throw new NotFoundException('Không tìm thấy bài viết');
     return updated;
   }
 
   async remove(id: string) {
+    const article = await this.articleModel.findById(id);
+    if (!article) {
+      throw new NotFoundException('Không tìm thấy bài viết');
+    }
+
+    // Xóa thumbnail
+    if (article.thumbnail) {
+      try {
+        await this.filesService.deleteFileByUrl(article.thumbnail);
+      } catch (error) {
+        console.error('Error deleting thumbnail:', error);
+      }
+    }
+
+    // Xóa tất cả ảnh trong content
+    if (article.content) {
+      try {
+        const imageUrls = this.filesService.extractImageUrls(article.content);
+        for (const url of imageUrls) {
+          await this.filesService.deleteFileByUrl(url);
+        }
+      } catch (error) {
+        console.error('Error deleting content images:', error);
+      }
+    }
+
     const deleted = await this.articleModel.findByIdAndDelete(id).exec();
-    if (!deleted) throw new NotFoundException('Không tìm thấy bài viết');
 
     this.eventsGateway.emitDeletedArticle(id);
 

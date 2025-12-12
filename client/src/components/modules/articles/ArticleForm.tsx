@@ -48,29 +48,6 @@ export default function ArticleForm({ articleId, initialValues, onSuccess }: Art
         setIsMounted(true);
     }, []);
 
-    // useEffect(() => {
-    //     if (!isMounted) return;
-
-    //     const fetchCats = async () => {
-    //         try {
-    //             const res = await categoryService.getCategories();
-    //             setCategories(res.map((c: any) => ({ label: c.name, value: c._id })));
-    //         } catch {
-    //             console.error('Lỗi tải danh mục');
-    //         }
-    //     };
-    //     fetchCats();
-
-    //     if (initialValues) {
-    //         form.setFieldsValue({
-    //             ...initialValues,
-    //             category: initialValues.category?._id || initialValues.category,
-    //             content: initialValues.content || ''
-    //         });
-    //         setThumbnailUrl(initialValues.thumbnail);
-    //     }
-    // }, [isMounted, initialValues, form]);
-
     useEffect(() => {
         if (!isMounted) return;
 
@@ -84,7 +61,6 @@ export default function ArticleForm({ articleId, initialValues, onSuccess }: Art
                 if (initialValues) {
                     let categoryId = initialValues.category;
 
-                    // Nếu category là object (có _id) -> lấy _id
                     if (categoryId && typeof categoryId === 'object' && '_id' in categoryId) {
                         categoryId = (categoryId as any)._id;
                     }
