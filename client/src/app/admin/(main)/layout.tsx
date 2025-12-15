@@ -1,20 +1,24 @@
 'use client';
 
-import { ProLayout } from '@ant-design/pro-components';
-import {
-    DashboardOutlined, FileTextOutlined, UserOutlined,
-    LogoutOutlined, AppstoreOutlined
-} from '@ant-design/icons';
-import { Dropdown, Switch, Spin } from 'antd';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
-import { useEffect, useState } from 'react';
+import { DashboardOutlined, FileTextOutlined, UserOutlined, LogoutOutlined, AppstoreOutlined } from '@ant-design/icons';
+import { ProLayout } from '@ant-design/pro-components';
+import { Dropdown, Switch, Spin } from 'antd';
 import { authService } from '@/services/auth.service';
 import { useTheme } from '@/providers/AntdConfigProvider';
 
-const SunIcon = () => <span>☀️</span>;
-const MoonIcon = () => <span>🌙</span>;
+// 1. Cấu hình Menu tập trung
+const menuRoute = {
+    routes: [
+        { path: '/admin/dashboard', name: 'Tổng quan', icon: <DashboardOutlined /> },
+        { path: '/admin/articles', name: 'Quản lý bài viết', icon: <FileTextOutlined /> },
+        { path: '/admin/categories', name: 'Chuyên mục', icon: <AppstoreOutlined /> },
+        { path: '/admin/users', name: 'Người dùng', icon: <UserOutlined /> },
+    ],
+};
 
 export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -22,17 +26,21 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
     const [userName, setUserName] = useState<string | null>(null);
     const { isDarkMode, toggleTheme } = useTheme();
 
+    // 2. Logic Auth & User Fetching
     useEffect(() => {
-        const fetchUser = async () => {
+        const initUser = async () => {
             try {
+                const token = Cookies.get('access_token');
+                if (!token) throw new Error('No token');
+
                 const user = await authService.getProfile();
                 setUserName(user.username);
-            } catch (error) {
+            } catch {
                 Cookies.remove('access_token');
-                router.push('/admin/login');
+                router.replace('/admin/login');
             }
         };
-        fetchUser();
+        initUser();
     }, [router]);
 
     const handleLogout = () => {
@@ -40,6 +48,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
         router.push('/admin/login');
     };
 
+    // 3. Render
     return (
         <ProLayout
             title="BFD News CMS"
@@ -49,46 +58,60 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
             fixSiderbar
             fixedHeader
             suppressHydrationWarning
-            onMenuHeaderClick={() => router.push('/admin/dashboard')}
-            route={{
-                routes: [
-                    { path: '/admin/dashboard', name: 'Tổng quan', icon: <DashboardOutlined /> },
-                    { path: '/admin/articles', name: 'Quản lý bài viết', icon: <FileTextOutlined /> },
-                    { path: '/admin/categories', name: 'Chuyên mục', icon: <AppstoreOutlined /> },
-                    { path: '/admin/users', name: 'Người dùng', icon: <UserOutlined /> },
-                ],
-            }}
+            // Config Routes
+            route={menuRoute}
             location={{ pathname }}
-            menuItemRender={(item, dom) => <Link href={item.path || '/admin/dashboard'}>{dom}</Link>}
+            // Navigation
+            onMenuHeaderClick={() => router.push('/admin/dashboard')}
+            menuItemRender={(item, dom) => (
+                <Link href={item.path || '/admin/dashboard'} onClick={(e) => e.stopPropagation()}>
+                    {dom}
+                </Link>
+            )}
+            // Actions Header (Theme Switch)
             actionsRender={(props) => {
                 if (props.isMobile) return [];
                 return [
-                    <Switch
-                        key="theme-switch"
-                        checkedChildren={<MoonIcon />}
-                        unCheckedChildren={<SunIcon />}
-                        checked={isDarkMode}
-                        onChange={toggleTheme}
-                        style={{ marginRight: 16 }}
-                    />
+                    <div key="theme-switch" className="mr-4 flex items-center">
+                        <Switch
+                            checkedChildren={<span>🌙</span>}
+                            unCheckedChildren={<span>☀️</span>}
+                            checked={isDarkMode}
+                            onChange={toggleTheme}
+                        />
+                    </div>
                 ];
             }}
+            // User Avatar & Dropdown
             avatarProps={{
                 src: 'https://api.dicebear.com/7.x/miniavs/svg?seed=2',
                 size: 'small',
                 title: userName || <Spin size="small" />,
-                render: (props, dom) => (
+                render: (_, dom) => (
                     <Dropdown
                         menu={{
-                            items: [{ key: 'logout', icon: <LogoutOutlined />, label: 'Đăng xuất', onClick: handleLogout }],
+                            items: [
+                                {
+                                    key: 'logout',
+                                    icon: <LogoutOutlined />,
+                                    label: 'Đăng xuất',
+                                    onClick: handleLogout,
+                                    danger: true
+                                }
+                            ],
                         }}
                     >
-                        {dom}
+                        <div className="cursor-pointer flex items-center gap-2 hover:bg-black/5 px-2 py-1 rounded transition-colors">
+                            {dom}
+                        </div>
                     </Dropdown>
                 ),
             }}
         >
-            {children}
+            {/* Main Content */}
+            <div className="min-h-[calc(100vh-100px)]">
+                {children}
+            </div>
         </ProLayout>
     );
 }

@@ -13,6 +13,8 @@ import { EventsGateway } from './events/events.gateway';
 import { DashboardModule } from './modules/dashboard/dashboard.modules';
 import { EventsModule } from './events/events.module';
 import { FilesModule } from './modules/files/files.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import KeyvRedis from '@keyv/redis';
 
 @Module({
   imports: [
@@ -25,6 +27,15 @@ import { FilesModule } from './modules/files/files.module';
         uri: configService.get<string>('MONGODB_URI'),
       }),
       inject: [ConfigService],
+    }),
+    CacheModule.registerAsync({
+      useFactory: () => ({
+        store: new KeyvRedis({
+          url: 'redis://localhost:6379',
+        }),
+        ttl: 60 * 1000,
+      }),
+      isGlobal: true,
     }),
     UsersModule,
     CategoriesModule,

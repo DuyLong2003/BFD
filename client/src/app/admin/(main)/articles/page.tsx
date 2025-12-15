@@ -1,15 +1,16 @@
 'use client';
 
+import { useRef } from 'react';
+import Link from 'next/link';
 import { ActionType, ProTable, ProColumns, PageContainer } from '@ant-design/pro-components';
-import { Button, Tag, Popconfirm, Tooltip, App, Image, Typography } from 'antd';
+import { Button, Tag, Popconfirm, Tooltip, App, Image, Typography, Space } from 'antd';
 import {
     PlusOutlined, EditOutlined, DeleteOutlined,
     SearchOutlined, PictureOutlined
 } from '@ant-design/icons';
-import { useRef } from 'react';
-import Link from 'next/link';
 import { articleService, Article } from '@/services/article.service';
 import { Category, categoryService } from '@/services/category.service';
+import dayjs from 'dayjs';
 
 const { Text } = Typography;
 
@@ -32,7 +33,7 @@ export default function ArticleListPage() {
             },
         },
 
-        // THUMBNAIL
+        // THUMBNAIL (Kết hợp Tailwind để style khung ảnh)
         {
             title: 'Ảnh',
             dataIndex: 'thumbnail',
@@ -40,20 +41,24 @@ export default function ArticleListPage() {
             align: 'center',
             search: false,
             render: (_, record) => (
-                <div style={{
-                    width: 50, height: 36, borderRadius: 4, overflow: 'hidden',
-                    border: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafafa'
-                }}>
+                <div className="w-[50px] h-[36px] rounded overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center mx-auto">
                     {record.thumbnail ? (
-                        <Image src={record.thumbnail} alt={record.title} width={50} height={36} style={{ objectFit: 'cover' }} />
+                        <Image
+                            src={record.thumbnail}
+                            alt={record.title}
+                            width={50}
+                            height={36}
+                            className="object-cover !h-full !w-full"
+                            preview={{ mask: false }}
+                        />
                     ) : (
-                        <PictureOutlined style={{ fontSize: 18, color: '#d9d9d9' }} />
+                        <PictureOutlined className="text-lg text-gray-300" />
                     )}
                 </div>
             ),
         },
 
-        // TIÊU ĐỀ 
+        // TIÊU ĐỀ
         {
             title: 'Tiêu đề',
             dataIndex: 'title',
@@ -62,14 +67,17 @@ export default function ArticleListPage() {
             sorter: true,
             render: (_, record) => (
                 <Tooltip title={record.title} placement="topLeft">
-                    <Link href={`/admin/articles/edit/${record._id}`} style={{ fontWeight: 500, color: '#1677ff' }}>
+                    <Link
+                        href={`/admin/articles/edit/${record._id}`}
+                        className="font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors block truncate"
+                    >
                         {record.title}
                     </Link>
                 </Tooltip>
             ),
             fieldProps: {
-                placeholder: 'Tìm theo tên...',
-                prefix: <SearchOutlined />,
+                placeholder: 'Nhập tên bài viết...',
+                prefix: <SearchOutlined className="text-gray-400" />,
             },
         },
 
@@ -80,37 +88,33 @@ export default function ArticleListPage() {
             valueType: 'select',
             sorter: true,
             width: 180,
-
-            // Filter (Dropdown)
             fieldProps: {
                 showSearch: true,
                 placeholder: 'Chọn chuyên mục',
             },
-
             request: async () => {
-                const cats = await categoryService.getCategories();
-                return (cats as unknown as Category[]).map((c) => ({
+                const res = await categoryService.getCategories();
+                const cats = Array.isArray(res) ? res : (res as any).data || [];
+                return cats.map((c: Category) => ({
                     label: c.name,
                     value: c._id
                 }));
             },
-
             search: {
-                transform: (value) => ({
-                    category: value,
-                }),
+                transform: (value) => ({ category: value }),
             },
-
             render: (_, record) => (
                 record.category ? (
-                    <Tag color="cyan">{record.category.name}</Tag>
+                    <Tag color="cyan" className="font-medium">
+                        {record.category.name}
+                    </Tag>
                 ) : (
-                    <Tag color="error">Lỗi dữ liệu</Tag>
+                    <Tag color="error">Không có danh mục</Tag>
                 )
             ),
         },
 
-        // TRẠNG THÁI 
+        // TRẠNG THÁI
         {
             title: 'Trạng thái',
             dataIndex: 'status',
@@ -118,7 +122,7 @@ export default function ArticleListPage() {
             valueType: 'select',
             sorter: true,
             fieldProps: {
-                placeholder: 'Chọn trạng thái',
+                placeholder: 'Lọc trạng thái',
             },
             valueEnum: {
                 Draft: { text: 'Nháp', status: 'Default' },
@@ -126,23 +130,21 @@ export default function ArticleListPage() {
             },
         },
 
-        // NGÀY TẠO 
+        // NGÀY TẠO
         {
             title: 'Ngày tạo',
             dataIndex: 'createdAt',
             valueType: 'dateRange',
-            width: 160,
+            width: 150,
             sorter: true,
             render: (_, record) => (
-                <Text type="secondary" style={{ fontSize: 13 }} suppressHydrationWarning>
-                    {new Date(record.createdAt).toLocaleDateString('vi-VN')}
-                </Text>
+                <span className="text-gray-500 text-sm">
+                    {dayjs(record.createdAt).format('DD/MM/YYYY')}
+                </span>
             ),
             search: {
                 transform: (value) => {
-                    if (!value || value.length === 0) {
-                        return { startDate: undefined, endDate: undefined };
-                    }
+                    if (!value || value.length === 0) return { startDate: undefined, endDate: undefined };
                     return { startDate: value[0], endDate: value[1] };
                 },
             },
@@ -154,45 +156,78 @@ export default function ArticleListPage() {
             valueType: 'option',
             fixed: 'right',
             width: 100,
-            render: (_, record) => [
-                <Tooltip title="Sửa" key="edit" mouseEnterDelay={1}>
-                    <Link href={`/admin/articles/edit/${record._id}`}>
-                        <Button type="text" size="small" icon={<EditOutlined style={{ color: '#faad14' }} />} />
-                    </Link>
-                </Tooltip>,
-                <Popconfirm
-                    key="delete"
-                    title="Xóa bài viết?"
-                    onConfirm={async () => {
-                        await articleService.deleteArticle(record._id);
-                        message.success('Đã xóa');
-                        actionRef.current?.reload();
-                    }}
-                    okButtonProps={{ danger: true }}
-                >
-                    <Tooltip title="Xóa" mouseEnterDelay={1}>
-                        <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+            render: (_, record) => (
+                <div className="flex items-center gap-x-2">
+                    <Tooltip title="Chỉnh sửa">
+                        <Link href={`/admin/articles/edit/${record._id}`}>
+                            <Button
+                                type="text"
+                                size="small"
+                                className="!text-amber-500 hover:!bg-amber-50"
+                                icon={<EditOutlined />}
+                            />
+                        </Link>
                     </Tooltip>
-                </Popconfirm>,
-            ],
+
+                    <Popconfirm
+                        title="Xóa bài viết?"
+                        description="Hành động này không thể hoàn tác!"
+                        onConfirm={async () => {
+                            await articleService.deleteArticle(record._id);
+                            message.success('Đã xóa bài viết thành công');
+                            actionRef.current?.reload();
+                        }}
+                        okText="Xóa"
+                        cancelText="Hủy"
+                        okButtonProps={{ danger: true }}
+                    >
+                        <Tooltip title="Xóa">
+                            <Button
+                                type="text"
+                                size="small"
+                                className="!text-red-500 hover:!bg-red-50"
+                                icon={<DeleteOutlined />}
+                            />
+                        </Tooltip>
+                    </Popconfirm>
+                </div>
+            ),
         },
     ];
 
     return (
         <PageContainer
             title="Quản lý bài viết"
+            subTitle="Danh sách tin tức và bài viết trên hệ thống"
             extra={[
                 <Link href="/admin/articles/create" key="create">
-                    <Button type="primary" icon={<PlusOutlined />}>Thêm bài viết</Button>
+                    <Button type="primary" icon={<PlusOutlined />} className="bg-blue-600 shadow-sm hover:shadow-md transition-all">
+                        Viết bài mới
+                    </Button>
                 </Link>,
             ]}
+            className="bg-gray-50 min-h-screen"
         >
             <ProTable<Article>
                 headerTitle="Danh sách bài viết"
                 actionRef={actionRef}
                 rowKey="_id"
-                form={{ syncToUrl: (values, type) => type === 'get' ? values : values }}
-
+                // Tùy chỉnh thanh công cụ
+                options={{
+                    density: true,
+                    fullScreen: true,
+                    reload: true,
+                    setting: true,
+                }}
+                // Style cho ô search
+                search={{
+                    labelWidth: 'auto',
+                    defaultCollapsed: false,
+                    className: 'bg-white p-4 rounded-lg shadow-sm mb-4',
+                    searchText: 'Tìm kiếm',
+                    resetText: 'Làm mới',
+                }}
+                // Xử lý request API
                 request={async (params, sort) => {
                     let sortString = undefined;
                     const sortKeyRaw = Object.keys(sort)[0];
@@ -201,11 +236,9 @@ export default function ArticleListPage() {
                         const sortOrder = sort[sortKeyRaw] === 'descend' ? '-' : '';
                         let cleanKey = sortKeyRaw;
                         if (cleanKey === 'category') cleanKey = 'category';
-
                         sortString = `${sortOrder}${cleanKey}`;
                     }
 
-                    // 2. Gọi API
                     const data = await articleService.getArticles({
                         page: params.current,
                         limit: params.pageSize,
@@ -224,15 +257,16 @@ export default function ArticleListPage() {
                     };
                 }}
                 columns={columns}
-                pagination={{ pageSize: 10, showSizeChanger: true }}
+                pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
+                    showTotal: (total) => `Tổng cộng ${total} bài viết`,
+                }}
                 dateFormatter="string"
                 cardBordered={false}
-                search={{
-                    labelWidth: 'auto',
-                    defaultCollapsed: false,
-                    searchText: 'Tìm kiếm',
-                    resetText: 'Làm mới',
-                }}
+                // Thêm class cho bảng để đẹp hơn
+                tableClassName="bg-white rounded-lg shadow-sm"
+                className="ant-pro-table-custom"
             />
         </PageContainer>
     );

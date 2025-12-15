@@ -3,7 +3,7 @@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { App, Flex, Typography, theme } from 'antd';
+import { App, theme } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
@@ -12,12 +12,11 @@ import { BaseInput, BasePasswordInput } from '@/components/core/BaseInput';
 import { authService } from '@/services/auth.service';
 import { loginSchema, LoginSchema } from '@/lib/validations/auth.schema';
 
-const { Title, Text } = Typography;
-
 export const LoginForm = () => {
     const router = useRouter();
     const { message } = App.useApp();
     const { token } = theme.useToken();
+
     const {
         control,
         handleSubmit,
@@ -48,9 +47,10 @@ export const LoginForm = () => {
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} style={{ width: '100%' }}>
-            <Flex vertical gap={24}>
-                <Flex vertical gap={6}>
+        <form onSubmit={handleSubmit(onSubmit)} className="w-full">
+            <div className="flex flex-col gap-6">
+                {/* Username Field */}
+                <div className="flex flex-col gap-1.5">
                     <Controller
                         name="username"
                         control={control}
@@ -61,13 +61,19 @@ export const LoginForm = () => {
                                 placeholder="Tài khoản quản trị"
                                 prefix={<UserOutlined style={{ color: token.colorTextDescription }} />}
                                 status={errors.username ? 'error' : ''}
+                                className="!py-2.5" // Tùy chỉnh padding nếu cần
                             />
                         )}
                     />
-                    {errors.username && <Text type="danger" style={{ fontSize: 12 }}>{errors.username.message}</Text>}
-                </Flex>
+                    {errors.username && (
+                        <span className="text-red-500 text-xs pl-1">
+                            {errors.username.message}
+                        </span>
+                    )}
+                </div>
 
-                <Flex vertical gap={6}>
+                {/* Password Field */}
+                <div className="flex flex-col gap-1.5">
                     <Controller
                         name="password"
                         control={control}
@@ -78,23 +84,29 @@ export const LoginForm = () => {
                                 placeholder="Mật khẩu"
                                 prefix={<LockOutlined style={{ color: token.colorTextDescription }} />}
                                 status={errors.password ? 'error' : ''}
+                                className="!py-2.5"
                             />
                         )}
                     />
-                    {errors.password && <Text type="danger" style={{ fontSize: 12 }}>{errors.password.message}</Text>}
-                </Flex>
+                    {errors.password && (
+                        <span className="text-red-500 text-xs pl-1">
+                            {errors.password.message}
+                        </span>
+                    )}
+                </div>
 
+                {/* Submit Button */}
                 <BaseButton
                     type="primary"
                     htmlType="submit"
                     size="large"
                     loading={loginMutation.isPending}
                     block
-                    style={{ marginTop: 8 }}
+                    className="mt-2 h-11 bg-blue-600 hover:!bg-blue-700 font-semibold shadow-md transition-all"
                 >
                     Đăng nhập
                 </BaseButton>
-            </Flex>
+            </div>
         </form>
     );
 };

@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react';
 import {
     Form, Input, Select, Button, Card,
-    Upload, App, Row, Col, Flex, Image, Spin,
-    Space
+    Upload, App, Spin, Image
 } from 'antd';
 import {
     SaveOutlined, ArrowLeftOutlined,
@@ -17,10 +16,11 @@ import { categoryService } from '@/services/category.service';
 import { fileService } from '@/services/file.service';
 import { articleService, Article } from '@/services/article.service';
 
+// Lazy load TinyMCE
 const TinyEditor = dynamic(() => import('@/components/core/TinyEditor'), {
     ssr: false,
     loading: () => (
-        <div style={{ height: 400, background: 'rgba(0,0,0,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="h-[400px] bg-gray-50 flex items-center justify-center rounded-lg border border-gray-200">
             <Spin tip="Đang tải trình soạn thảo..." />
         </div>
     )
@@ -54,13 +54,13 @@ export default function ArticleForm({ articleId, initialValues, onSuccess }: Art
         const initData = async () => {
             try {
                 const res = await categoryService.getCategories();
+                // Handle data trả về từ API (có thể là mảng hoặc object {data: []})
                 const catList = Array.isArray(res) ? res : (res as any).data || [];
 
                 setCategories(catList.map((c: any) => ({ label: c.name, value: c._id })));
 
                 if (initialValues) {
                     let categoryId = initialValues.category;
-
                     if (categoryId && typeof categoryId === 'object' && '_id' in categoryId) {
                         categoryId = (categoryId as any)._id;
                     }
@@ -113,23 +113,24 @@ export default function ArticleForm({ articleId, initialValues, onSuccess }: Art
                 msg.success('Tạo mới thành công');
             }
 
-            setTimeout(() => {
-                router.push('/admin/articles');
-                router.refresh();
-            }, 1500);
+            if (onSuccess) {
+                onSuccess();
+            } else {
+                setTimeout(() => {
+                    router.push('/admin/articles');
+                    router.refresh();
+                }, 1000);
+            }
         } catch (error: any) {
             console.error("Lỗi submit:", error);
-            if (error.response) {
-                msg.error(error.response?.data?.message || 'Có lỗi xảy ra từ hệ thống');
-            } else {
-                msg.error('Không thể kết nối đến máy chủ');
-            }
+            const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra từ hệ thống';
+            msg.error(errorMessage);
             setLoading(false);
         }
     };
 
     if (!isMounted) {
-        return <div style={{ padding: 50, textAlign: 'center' }}><Spin size="large" /></div>;
+        return <div className="p-12 text-center"><Spin size="large" /></div>;
     }
 
     return (
@@ -144,59 +145,58 @@ export default function ArticleForm({ articleId, initialValues, onSuccess }: Art
                     form.setFieldValue('slug', slug);
                 }
             }}
+            className="w-full"
         >
-            <Row gutter={24}>
-                <Col span={18}>
-                    <Card title="Nội dung bài viết" variant='borderless'>
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                {/* LEFT COLUMN: MAIN CONTENT */}
+                <div className="lg:col-span-3 space-y-6">
+                    <Card title="Nội dung bài viết" bordered={false} className="shadow-sm rounded-lg">
                         <Form.Item
                             name="title"
                             label="Tiêu đề bài viết"
                             rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}
                         >
-                            <Input size="large" placeholder="Nhập tiêu đề..." />
+                            <Input size="large" placeholder="Nhập tiêu đề bài viết..." className="font-medium" />
                         </Form.Item>
 
                         <Form.Item label="Đường dẫn tĩnh (Slug)" required>
-                            <Space.Compact style={{ width: '100%' }}>
-                                <Button disabled type="default" style={{
-                                    cursor: 'default',
-                                    backgroundColor: 'rgba(0, 0, 0, 0.02)',
-                                    color: 'rgba(0, 0, 0, 0.45)',
-                                    borderColor: '#d9d9d9'
-                                }}>
+                            <div className="flex items-center w-full">
+                                <div className="bg-gray-100 border border-r-0 border-gray-300 text-gray-500 px-3 py-[5px] rounded-l-md cursor-default select-none">
                                     /posts/
-                                </Button>
-
+                                </div>
                                 <Form.Item
                                     name="slug"
                                     noStyle
                                     rules={[{ required: true, message: 'Vui lòng nhập slug' }]}
                                 >
-                                    <Input placeholder="duong-dan-bai-viet" />
+                                    <Input placeholder="duong-dan-bai-viet" className="rounded-l-none" />
                                 </Form.Item>
-                            </Space.Compact>
+                            </div>
                         </Form.Item>
 
                         <Form.Item
                             name="content"
                             label="Nội dung chi tiết"
                             rules={[{ required: true, message: 'Vui lòng nhập nội dung' }]}
+                            className="min-h-[400px]"
                         >
                             <TinyEditor />
                         </Form.Item>
                     </Card>
-                </Col>
+                </div>
 
-                <Col span={6}>
-                    <Flex vertical gap={24}>
-                        <Card title="Đăng bài" variant='borderless'>
-                            <Form.Item name="status" label="Trạng thái">
-                                <Select options={[
-                                    { value: 'Draft', label: 'Bản nháp' },
-                                    { value: 'Published', label: 'Công khai' }
-                                ]} />
-                            </Form.Item>
+                {/* RIGHT COLUMN: SIDEBAR ACTION */}
+                <div className="lg:col-span-1 space-y-6">
+                    {/* Panel 1: Publish Action */}
+                    <Card title="Đăng bài" bordered={false} className="shadow-sm rounded-lg">
+                        <Form.Item name="status" label="Trạng thái" className="mb-4">
+                            <Select options={[
+                                { value: 'Draft', label: 'Bản nháp' },
+                                { value: 'Published', label: 'Công khai' }
+                            ]} />
+                        </Form.Item>
 
+                        <div className="flex flex-col gap-3">
                             <Button
                                 type="primary"
                                 htmlType="submit"
@@ -204,71 +204,75 @@ export default function ArticleForm({ articleId, initialValues, onSuccess }: Art
                                 loading={loading}
                                 block
                                 size="large"
+                                className="bg-blue-600 hover:bg-blue-700 font-medium shadow-sm"
                             >
                                 {isEdit ? 'Cập nhật' : 'Lưu bài viết'}
                             </Button>
 
                             <Button
-                                style={{ marginTop: 10 }}
                                 block
                                 icon={<ArrowLeftOutlined />}
                                 onClick={() => router.back()}
+                                className="hover:bg-gray-50"
                             >
                                 Quay lại
                             </Button>
-                        </Card>
+                        </div>
+                    </Card>
 
-                        <Card title="Phân loại" variant='borderless'>
-                            <Form.Item
-                                name="category"
-                                label="Chuyên mục"
-                                rules={[{ required: true, message: 'Chọn chuyên mục' }]}
-                            >
-                                <Select
-                                    placeholder="Chọn chuyên mục"
-                                    options={categories}
-                                    showSearch
-                                    filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
-                                />
-                            </Form.Item>
-                        </Card>
+                    {/* Panel 2: Category */}
+                    <Card title="Phân loại" bordered={false} className="shadow-sm rounded-lg">
+                        <Form.Item
+                            name="category"
+                            label="Chuyên mục"
+                            rules={[{ required: true, message: 'Chọn chuyên mục' }]}
+                            className="mb-0"
+                        >
+                            <Select
+                                placeholder="Chọn chuyên mục"
+                                options={categories}
+                                showSearch
+                                filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
+                            />
+                        </Form.Item>
+                    </Card>
 
-                        <Card title="Ảnh đại diện" variant='borderless'>
-                            <Form.Item name="thumbnail" hidden>
-                                <Input />
-                            </Form.Item>
+                    {/* Panel 3: Thumbnail */}
+                    <Card title="Ảnh đại diện" bordered={false} className="shadow-sm rounded-lg">
+                        <Form.Item name="thumbnail" hidden>
+                            <Input />
+                        </Form.Item>
 
-                            <Upload.Dragger
-                                name="file"
-                                multiple={false}
-                                showUploadList={false}
-                                beforeUpload={handleUpload}
-                                style={{ padding: 20, background: '#fafafa' }}
-                            >
-                                {thumbnailUrl ? (
-                                    <div style={{ position: 'relative' }}>
-                                        <img
-                                            src={thumbnailUrl}
-                                            alt="thumbnail"
-                                            style={{ width: '100%', borderRadius: 8, maxHeight: 200, objectFit: 'cover' }}
-                                        />
-                                        <div style={{ marginTop: 8, color: '#1677ff', fontSize: 12 }}>
-                                            Nhấn để thay đổi
-                                        </div>
+                        <Upload.Dragger
+                            name="file"
+                            multiple={false}
+                            showUploadList={false}
+                            beforeUpload={handleUpload}
+                            className="!bg-gray-50 hover:!bg-gray-100 transition-colors border-dashed"
+                        >
+                            {thumbnailUrl ? (
+                                <div className="relative group">
+                                    <img
+                                        src={thumbnailUrl}
+                                        alt="thumbnail"
+                                        className="w-full h-auto max-h-[200px] object-cover rounded-md shadow-sm"
+                                    />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-md">
+                                        <span className="text-white text-xs font-medium bg-black/60 px-2 py-1 rounded">Nhấn để thay đổi</span>
                                     </div>
-                                ) : (
-                                    <div>
-                                        <p className="ant-upload-drag-icon">
-                                            {uploading ? <LoadingOutlined /> : <PlusOutlined />}
-                                        </p>
-                                        <p className="ant-upload-text" style={{ fontSize: 14 }}>Tải ảnh lên</p>
-                                    </div>
-                                )}
-                            </Upload.Dragger>
-                        </Card>
-                    </Flex>
-                </Col>
-            </Row>
+                                </div>
+                            ) : (
+                                <div className="py-8">
+                                    <p className="text-3xl text-blue-500 mb-2">
+                                        {uploading ? <LoadingOutlined /> : <PlusOutlined />}
+                                    </p>
+                                    <p className="text-sm text-gray-500 font-medium">Tải ảnh lên</p>
+                                </div>
+                            )}
+                        </Upload.Dragger>
+                    </Card>
+                </div>
+            </div>
         </Form>
     );
 }

@@ -1,57 +1,56 @@
 'use client';
 
-import { Layout, Row, Col, Typography, Space } from 'antd';
+import { Typography } from 'antd';
+import Link from 'next/link';
 import { FacebookFilled, TwitterSquareFilled, LinkedinFilled } from '@ant-design/icons';
 
-const { Footer } = Layout;
-const { Title, Text, Link } = Typography;
+const { Title, Text } = Typography;
 
 export default function PublicFooter() {
     return (
-        <Footer style={{ background: '#001529', color: '#fff', padding: '48px 24px' }}>
-            <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-                <Row gutter={[32, 32]}>
+        <footer className="bg-[#001529] text-white py-12 px-6">
+            <div className="max-w-[1200px] mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {/* Cột 1: Thông tin công ty */}
-                    <Col xs={24} md={8}>
-                        <Title level={4} style={{ color: '#fff', margin: 0 }}>BFD NEWS</Title>
-                        <Text style={{ color: 'rgba(255,255,255,0.65)', display: 'block', marginTop: 16 }}>
+                    <div>
+                        <Title level={4} className="!text-white !m-0">BFD NEWS</Title>
+                        <Text className="!text-white/65 block mt-4">
                             Hệ thống tin tức cập nhật công nghệ nhanh nhất, chính xác nhất. Đồng hành cùng sự phát triển của bạn.
                         </Text>
-                    </Col>
+                    </div>
 
                     {/* Cột 2: Liên kết nhanh */}
-                    <Col xs={24} md={8}>
-                        <Title level={5} style={{ color: '#fff' }}>Liên kết</Title>
-                        <Space direction="vertical" style={{ marginTop: 8 }}>
-                            <Link href="/" style={{ color: 'rgba(255,255,255,0.65)' }}>Trang chủ</Link>
-                            <Link href="/news" style={{ color: 'rgba(255,255,255,0.65)' }}>Tin tức</Link>
-                            <Link href="/about" style={{ color: 'rgba(255,255,255,0.65)' }}>Về chúng tôi</Link>
-                        </Space>
-                    </Col>
+                    <div>
+                        <Title level={5} className="!text-white">Liên kết</Title>
+                        <div className="flex flex-col gap-2 mt-2">
+                            <Link href="/" className="text-white/65 hover:text-white transition-colors">Trang chủ</Link>
+                            <Link href="/news" className="text-white/65 hover:text-white transition-colors">Tin tức</Link>
+                            <Link href="/about" className="text-white/65 hover:text-white transition-colors">Về chúng tôi</Link>
+                        </div>
+                    </div>
 
                     {/* Cột 3: Liên hệ */}
-                    <Col xs={24} md={8}>
-                        <Title level={5} style={{ color: '#fff' }}>Liên hệ</Title>
-                        <Text style={{ color: 'rgba(255,255,255,0.65)', display: 'block', marginTop: 8 }}>
-                            Email: contact@bfd-news.com
-                        </Text>
-                        <Text style={{ color: 'rgba(255,255,255,0.65)', display: 'block' }}>
-                            Hotline: 0987 654 321
-                        </Text>
-                        <Space style={{ marginTop: 16, fontSize: 24 }}>
-                            <FacebookFilled style={{ color: '#fff' }} />
-                            <TwitterSquareFilled style={{ color: '#fff' }} />
-                            <LinkedinFilled style={{ color: '#fff' }} />
-                        </Space>
-                    </Col>
-                </Row>
+                    <div>
+                        <Title level={5} className="!text-white">Liên hệ</Title>
+                        <div className="flex flex-col gap-2 mt-2">
+                            <Text className="!text-white/65">Email: contact@bfd-news.com</Text>
+                            <Text className="!text-white/65">Hotline: 0987 654 321</Text>
+                        </div>
+                        <div className="flex gap-4 mt-4 text-2xl">
+                            <FacebookFilled className="text-white hover:text-blue-500 cursor-pointer transition-colors" />
+                            <TwitterSquareFilled className="text-white hover:text-blue-400 cursor-pointer transition-colors" />
+                            <LinkedinFilled className="text-white hover:text-blue-700 cursor-pointer transition-colors" />
+                        </div>
+                    </div>
+                </div>
 
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: 32, paddingTop: 16, textAlign: 'center' }}>
-                    <Text style={{ color: 'rgba(255,255,255,0.45)' }}>
+                {/* Copyright */}
+                <div className="border-t border-white/10 mt-8 pt-4 text-center">
+                    <Text className="!text-white/45 text-sm">
                         © 2025 BFD News. All rights reserved.
                     </Text>
                 </div>
             </div>
-        </Footer>
+        </footer>
     );
 }

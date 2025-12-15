@@ -1,65 +1,46 @@
 'use client';
 
-import { Flex, Card, Typography } from 'antd';
+import { Card, Typography } from 'antd';
 import { LoginForm } from '@/components/modules/auth/LoginForm';
 
 const { Title, Text } = Typography;
 
 export default function LoginPage() {
     return (
-        <div
-            style={{
-                height: '100vh',
-                width: '100vw',
-                background: '#F4F5F7', // Nền xám
-                backgroundImage: 'radial-gradient(#E3E5E8 1px, transparent 1px)', // Họa tiết chấm bi cực mờ
-                backgroundSize: '24px 24px',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-            }}
-        >
-            <Card
-                variant="borderless"
+        <div className="h-screen w-screen bg-gray-100 flex justify-center items-center relative overflow-hidden">
+            {/* Background Pattern (Chấm bi mờ) */}
+            <div className="absolute inset-0 opacity-40 pointer-events-none"
                 style={{
-                    width: 400,
-                    maxWidth: '90%',
-                    boxShadow: '0 12px 24px -6px rgba(0, 0, 0, 0.08)', // Bóng đổ mềm
-                    overflow: 'hidden',
+                    backgroundImage: 'radial-gradient(#CBD5E1 1px, transparent 1px)',
+                    backgroundSize: '24px 24px'
                 }}
+            />
+
+            <Card
+                variant='borderless'
+                className="w-[400px] max-w-[90%] shadow-xl rounded-2xl overflow-hidden relative z-10"
                 styles={{ body: { padding: '48px 40px' } }}
             >
-                <Flex vertical align="center" style={{ marginBottom: 32 }}>
-                    <div
-                        style={{
-                            width: 48,
-                            height: 48,
-                            background: 'linear-gradient(135deg, #0052CC 0%, #2684FF 100%)',
-                            borderRadius: 12,
-                            marginBottom: 16,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#fff',
-                            fontWeight: 'bold',
-                            fontSize: 24
-                        }}
-                    >
-                        B
+                {/* Header Logo Section */}
+                <div className="flex flex-col items-center mb-8">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-400 rounded-xl flex items-center justify-center mb-4 shadow-md">
+                        <span className="text-white font-bold text-2xl">B</span>
                     </div>
 
-                    <Title level={3} style={{ margin: '0 0 8px', color: '#172B4D' }}>
+                    <Title level={3} className="!mb-2 !text-gray-800 text-center">
                         Đăng nhập hệ thống
                     </Title>
-                    <Text type="secondary">
+                    <Text type="secondary" className="text-center">
                         Nhập thông tin quản trị viên BFD để tiếp tục
                     </Text>
-                </Flex>
+                </div>
 
+                {/* Form */}
                 <LoginForm />
 
-                <div style={{ marginTop: 24, textAlign: 'center' }}>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
+                {/* Footer */}
+                <div className="mt-8 text-center">
+                    <Text type="secondary" className="text-xs block">
                         © 2025 BFD Technology. All rights reserved.
                     </Text>
                 </div>

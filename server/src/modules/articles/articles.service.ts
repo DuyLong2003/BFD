@@ -1,82 +1,124 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateArticleDto } from './dto/create-article.dto';
-import { UpdateArticleDto } from './dto/update-article.dto';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Article, ArticleDocument } from './schemas/article.schema';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { isValidObjectId, Model } from 'mongoose';
 import slugify from 'slugify';
+
+import { CreateArticleDto } from './dto/create-article.dto';
+import { UpdateArticleDto } from './dto/update-article.dto';
+import { Article, ArticleDocument } from './schemas/article.schema';
 import { EventsGateway } from 'src/events/events.gateway';
-import { User } from '../users/schemas/user.schema';
 import { FilesService } from '../files/files.service';
+import { User } from '../users/schemas/user.schema';
 
 @Injectable()
 export class ArticlesService {
+  private listCacheKeys = new Set<string>();
+  private readonly LIST_CACHE_TRACKING_KEY = 'articles:list:tracking';
+
   constructor(
     @InjectModel(Article.name)
-    private articleModel: Model<ArticleDocument>,
-    private eventsGateway: EventsGateway,
-    private filesService: FilesService, // 
-  ) { }
-
-  async create(createArticleDto: CreateArticleDto, user: User & { _id: string }) {
-    // Nếu user không gửi slug, tự tạo từ title
-    if (!createArticleDto.slug) {
-      createArticleDto.slug = slugify(createArticleDto.title, { lower: true, locale: 'vi' });
-    }
-
-    // Xử lý trùng lặp Slug
-    const slugExists = await this.articleModel.findOne({ slug: createArticleDto.slug });
-    if (slugExists) {
-      createArticleDto.slug = `${createArticleDto.slug}-${Date.now()}`;
-    }
-
-    // Move thumbnail từ temp/ → articles/
-    if (createArticleDto.thumbnail) {
-      try {
-        createArticleDto.thumbnail = await this.filesService.moveFromTemp(
-          createArticleDto.thumbnail
-        );
-      } catch (error) {
-        console.error('Error moving thumbnail:', error);
-      }
-    }
-
-    // Extract và move tất cả ảnh trong content
-    if (createArticleDto.content) {
-      try {
-        const imageUrls = this.filesService.extractImageUrls(createArticleDto.content);
-
-        for (const url of imageUrls) {
-          const newUrl = await this.filesService.moveFromTemp(url);
-          createArticleDto.content = createArticleDto.content.replace(url, newUrl);
-        }
-      } catch (error) {
-        console.error('Error moving content images:', error);
-      }
-    }
-
-    const createdArticle = new this.articleModel({
-      ...createArticleDto,
-      author: user._id
-    });
-
-    const newArticle = await createdArticle.save();
-
-    this.eventsGateway.emitNewArticle(newArticle);
-
-    return newArticle;
+    private readonly articleModel: Model<ArticleDocument>,
+    private readonly eventsGateway: EventsGateway,
+    private readonly filesService: FilesService,
+    @Inject(CACHE_MANAGER) private readonly cache: Cache,
+  ) {
+    this.loadTrackedKeys();
   }
 
-  async findAll(query: {
-    page?: string | number;
-    limit?: string | number;
-    category?: string;
-    q?: string;
-    startDate?: string;
-    endDate?: string;
-    status?: string;
-    sort?: string;
-  }) {
+  private async loadTrackedKeys() {
+    try {
+      const keys = await this.cache.get<string[]>(this.LIST_CACHE_TRACKING_KEY);
+      if (keys && Array.isArray(keys)) {
+        this.listCacheKeys = new Set(keys);
+        console.log(`Loaded ${keys.length} tracked cache keys`);
+      }
+    } catch (error) {
+      console.error('Error loading tracked keys:', error);
+    }
+  }
+
+  private async saveTrackedKeys() {
+    try {
+      await this.cache.set(
+        this.LIST_CACHE_TRACKING_KEY,
+        Array.from(this.listCacheKeys),
+        0
+      );
+    } catch (error) {
+      console.error('Error saving tracked keys:', error);
+    }
+  }
+
+  async create(dto: CreateArticleDto, user: User & { _id: string }) {
+    if (!dto.slug) {
+      dto.slug = slugify(dto.title, { lower: true, locale: 'vi' });
+    }
+
+    const slugExists = await this.articleModel.findOne({ slug: dto.slug });
+    if (slugExists) {
+      dto.slug = `${dto.slug}-${Date.now()}`;
+    }
+
+    if (dto.thumbnail) {
+      dto.thumbnail = await this.filesService.moveFromTemp(dto.thumbnail);
+    }
+
+    if (dto.content) {
+      const imageUrls = this.filesService.extractImageUrls(dto.content);
+      for (const url of imageUrls) {
+        const newUrl = await this.filesService.moveFromTemp(url);
+        dto.content = dto.content.replace(url, newUrl);
+      }
+    }
+
+    const article = await this.articleModel.create({
+      ...dto,
+      author: user._id,
+    });
+
+    this.eventsGateway.emitNewArticle(article);
+
+    // Xóa cache khi tạo bài mới
+    await this.invalidateListCache();
+
+    return article;
+  }
+
+  async findAll(
+    query: {
+      page?: string | number;
+      limit?: string | number;
+      category?: string;
+      q?: string;
+      startDate?: string;
+      endDate?: string;
+      status?: string;
+      sort?: string;
+    },
+    skipCache: boolean = false
+  ) {
+    const cacheKey = `articles:list:${JSON.stringify(query)}`;
+
+    if (!skipCache) {
+      const cached = await this.cache.get<{
+        data: Article[];
+        total: number;
+      }>(cacheKey);
+
+      if (cached) {
+        console.log(' Cache hit:', cacheKey);
+        return cached;
+      }
+    } else {
+      console.log('Cache skipped (Admin request)');
+    }
+
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -85,9 +127,7 @@ export class ArticlesService {
 
     if (query.category) filter.category = query.category;
     if (query.status) filter.status = query.status;
-    if (query.q) {
-      filter.title = { $regex: query.q, $options: 'i' };
-    }
+    if (query.q) filter.title = { $regex: query.q, $options: 'i' };
     if (query.startDate && query.endDate) {
       filter.createdAt = {
         $gte: new Date(query.startDate),
@@ -95,31 +135,35 @@ export class ArticlesService {
       };
     }
 
-    let sortConfig: any = { createdAt: -1 };
+    const sort: any = query.sort
+      ? { [query.sort.replace('-', '')]: query.sort.startsWith('-') ? -1 : 1 }
+      : { createdAt: -1 };
 
-    if (query.sort) {
-      const isDesc = query.sort.startsWith('-');
-      const field = query.sort.replace('-', '');
+    const [data, total] = await Promise.all([
+      this.articleModel
+        .find(filter)
+        .select('-content')
+        .populate('category', 'name slug')
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.articleModel.countDocuments(filter),
+    ]);
 
-      if (field === 'category') {
-        sortConfig = { 'category': isDesc ? -1 : 1 };
-      } else {
-        sortConfig = { [field]: isDesc ? -1 : 1 };
-      }
+    const result = { data, total };
+
+    if (!skipCache) {
+      await this.cache.set(cacheKey, result, 180_000); // 3 phút
+
+      // Track cache key
+      this.listCacheKeys.add(cacheKey);
+      await this.saveTrackedKeys();
+
+      console.log('Cached result:', cacheKey);
     }
 
-    const total = await this.articleModel.countDocuments(filter);
-
-    const data = await this.articleModel
-      .find(filter)
-      .select('-content')
-      .populate('category', 'name slug')
-      .sort(sortConfig)
-      .skip(skip)
-      .limit(limit)
-      .exec();
-
-    return { data, total };
+    return result;
   }
 
   async findOne(id: string) {
@@ -133,53 +177,61 @@ export class ArticlesService {
       .exec();
 
     if (!article) throw new NotFoundException('Bài viết không tồn tại');
+
     return article;
   }
 
-  async update(id: string, updateArticleDto: UpdateArticleDto) {
-    const existingArticle = await this.articleModel.findById(id);
-    if (!existingArticle) {
-      throw new NotFoundException('Không tìm thấy bài viết');
+  async findBySlug(slug: string) {
+    const cacheKey = `articles:detail:${slug}`;
+
+    const cached = await this.cache.get<Article>(cacheKey);
+    if (cached) {
+      console.log('Cache hit (detail):', cacheKey);
+      return cached;
     }
 
-    // Auto-generate slug nếu có title mới
-    if (updateArticleDto.title && !updateArticleDto.slug) {
-      updateArticleDto.slug = slugify(updateArticleDto.title, { lower: true, locale: 'vi' });
+    const article = await this.articleModel
+      .findOne({ slug, status: 'Published' })
+      .populate('category', 'name slug')
+      .populate('author', 'username')
+      .exec();
+
+    if (!article) throw new NotFoundException('Bài viết không tồn tại');
+
+    await this.cache.set(cacheKey, article, 3_600_000); // 1 giờ
+    console.log('Cached detail:', cacheKey);
+
+    return article;
+  }
+
+  async update(id: string, dto: UpdateArticleDto) {
+    const existing = await this.articleModel.findById(id);
+    if (!existing) throw new NotFoundException('Không tìm thấy bài viết');
+
+    if (dto.title && !dto.slug) {
+      dto.slug = slugify(dto.title, { lower: true, locale: 'vi' });
     }
 
-    // Xử lý thumbnail
-    if (updateArticleDto.thumbnail && updateArticleDto.thumbnail !== existingArticle.thumbnail) {
+    if (dto.thumbnail && dto.thumbnail !== existing.thumbnail) {
       try {
-        // Move thumbnail mới từ temp/ → articles/
-        updateArticleDto.thumbnail = await this.filesService.moveFromTemp(
-          updateArticleDto.thumbnail
-        );
-
-        // Xóa thumbnail cũ
-        if (existingArticle.thumbnail) {
-          await this.filesService.deleteFileByUrl(existingArticle.thumbnail);
+        dto.thumbnail = await this.filesService.moveFromTemp(dto.thumbnail);
+        if (existing.thumbnail) {
+          await this.filesService.deleteFileByUrl(existing.thumbnail);
         }
       } catch (error) {
         console.error('Error updating thumbnail:', error);
       }
     }
 
-    // Xử lý ảnh trong content
-    if (updateArticleDto.content) {
+    if (dto.content) {
       try {
-        // Lấy ảnh mới trong content
-        const newImageUrls = this.filesService.extractImageUrls(updateArticleDto.content);
-
-        // Move ảnh mới từ temp/ → articles/
+        const newImageUrls = this.filesService.extractImageUrls(dto.content);
         for (const url of newImageUrls) {
           const newUrl = await this.filesService.moveFromTemp(url);
-          updateArticleDto.content = updateArticleDto.content.replace(url, newUrl);
+          dto.content = dto.content.replace(url, newUrl);
         }
 
-        // Lấy ảnh cũ trong content
-        const oldImageUrls = this.filesService.extractImageUrls(existingArticle.content || '');
-
-        // Xóa ảnh cũ không còn dùng nữa
+        const oldImageUrls = this.filesService.extractImageUrls(existing.content || '');
         const urlsToDelete = oldImageUrls.filter(
           oldUrl => !newImageUrls.some(newUrl =>
             newUrl === oldUrl || newUrl.replace('articles/', 'temp/') === oldUrl
@@ -195,19 +247,24 @@ export class ArticlesService {
     }
 
     const updated = await this.articleModel
-      .findByIdAndUpdate(id, updateArticleDto, { new: true })
+      .findByIdAndUpdate(id, dto, { new: true })
       .exec();
+
+    if (updated) {
+      await this.cache.del(`articles:detail:${existing.slug}`);
+      if (dto.slug && dto.slug !== existing.slug) {
+        await this.cache.del(`articles:detail:${dto.slug}`);
+      }
+      await this.invalidateListCache();
+    }
 
     return updated;
   }
 
   async remove(id: string) {
     const article = await this.articleModel.findById(id);
-    if (!article) {
-      throw new NotFoundException('Không tìm thấy bài viết');
-    }
+    if (!article) throw new NotFoundException('Không tìm thấy bài viết');
 
-    // Xóa thumbnail
     if (article.thumbnail) {
       try {
         await this.filesService.deleteFileByUrl(article.thumbnail);
@@ -216,7 +273,6 @@ export class ArticlesService {
       }
     }
 
-    // Xóa tất cả ảnh trong content
     if (article.content) {
       try {
         const imageUrls = this.filesService.extractImageUrls(article.content);
@@ -228,10 +284,30 @@ export class ArticlesService {
       }
     }
 
-    const deleted = await this.articleModel.findByIdAndDelete(id).exec();
+    await this.articleModel.findByIdAndDelete(id).exec();
+
+    await this.cache.del(`articles:detail:${article.slug}`);
+    await this.invalidateListCache();
 
     this.eventsGateway.emitDeletedArticle(id);
 
-    return deleted;
+    return true;
+  }
+
+  private async invalidateListCache() {
+    try {
+      const keys = Array.from(this.listCacheKeys);
+
+      if (keys.length > 0) {
+        await Promise.all(keys.map(key => this.cache.del(key)));
+        console.log(`Invalidated ${keys.length} list cache entries`);
+
+        // Clear tracking
+        this.listCacheKeys.clear();
+        await this.cache.del(this.LIST_CACHE_TRACKING_KEY);
+      }
+    } catch (error) {
+      console.error('Error invalidating cache:', error);
+    }
   }
 }

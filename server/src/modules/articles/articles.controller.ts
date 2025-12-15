@@ -15,6 +15,7 @@ export class ArticlesController {
     return this.articlesService.create(createArticleDto, req.user);
   }
 
+  // ✅ Endpoint này dùng chung cho cả Admin & Public
   @Public()
   @Get()
   findAll(
@@ -26,8 +27,18 @@ export class ArticlesController {
     @Query('endDate') endDate: string,
     @Query('status') status: string,
     @Query('sort') sort: string,
+    @Query('noCache') noCache: string, // ✅ Thêm param này
   ) {
-    return this.articlesService.findAll({ page, limit, category, q, startDate, endDate, status, sort });
+    return this.articlesService.findAll(
+      { page, limit, category, q, startDate, endDate, status, sort },
+      noCache === 'true',
+    );
+  }
+
+  @Public()
+  @Get('public/:slug')
+  async findBySlug(@Param('slug') slug: string) {
+    return this.articlesService.findBySlug(slug);
   }
 
   @Public()

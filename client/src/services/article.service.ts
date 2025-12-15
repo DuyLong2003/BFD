@@ -10,6 +10,7 @@ export interface Article {
     status?: string;
     createdAt: string;
     updatedAt: string;
+    author?: { _id: string; username: string };
 }
 
 export interface CreateArticleDto {
@@ -21,13 +22,13 @@ export interface CreateArticleDto {
     status: string;
 }
 
-// Cập nhật response có chứa total
 export interface ArticleResponse {
     data: Article[];
     total: number;
 }
 
 export const articleService = {
+    // ✅ Admin: Gọi với noCache=true
     getArticles: async (params: {
         page?: number;
         limit?: number;
@@ -38,7 +39,12 @@ export const articleService = {
         status?: string;
         sort?: string;
     }) => {
-        return axiosClient.get<any, ArticleResponse>('/articles', { params });
+        return axiosClient.get<any, ArticleResponse>('/articles', {
+            params: {
+                ...params,
+                noCache: 'true', // ✅ Skip cache cho admin
+            }
+        });
     },
 
     deleteArticle: (id: string) => {
@@ -57,9 +63,23 @@ export const articleService = {
         return axiosClient.patch(`/articles/${id}`, data);
     },
 
-    getPublicArticles: (params?: { page?: number; limit?: number; category?: string }) => {
-        return axiosClient.get<any, { data: Article[], total: number }>('/articles', {
-            params: { ...params, status: 'Published' }
+    // ✅ Public: KHÔNG skip cache
+    getPublicArticles: (params?: {
+        page?: number;
+        limit?: number;
+        category?: string;
+        q?: string
+    }) => {
+        return axiosClient.get<any, ArticleResponse>('/articles', {
+            params: {
+                ...params,
+                status: 'Published',
+                // ✅ Không thêm noCache → Sẽ dùng cache
+            }
         });
     },
+
+    getArticleBySlug: (slug: string) => {
+        return axiosClient.get<any, Article>(`/articles/public/${slug}`);
+    }
 };
