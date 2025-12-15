@@ -1,6 +1,6 @@
 'use client';
 
-import { Row, Col, Typography, Button, Image } from 'antd';
+import { Typography, Button, Image } from 'antd';
 import { ArrowRightOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
@@ -8,38 +8,48 @@ const { Title, Paragraph } = Typography;
 
 export default function Introduction() {
     return (
-        <div style={{ padding: '60px 0' }}>
-            <Row gutter={[48, 32]} align="middle">
-                <Col xs={24} md={12}>
-                    <Image
-                        src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                        alt="About BFD"
-                        preview={false}
-                        style={{ borderRadius: 16, boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}
-                    />
-                </Col>
-                <Col xs={24} md={12}>
-                    <Title level={5} style={{ color: '#0052CC', textTransform: 'uppercase', letterSpacing: 1 }}>
+        <section className="py-20 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            {/* Cột Ảnh */}
+            <div className="relative group">
+                <div className="absolute inset-0 bg-blue-600 rounded-2xl transform rotate-3 opacity-10 group-hover:rotate-6 transition-transform duration-500"></div>
+                <Image
+                    src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                    alt="About BFD"
+                    preview={false}
+                    className="!rounded-2xl shadow-xl relative z-10"
+                    wrapperClassName="w-full"
+                />
+            </div>
+
+            {/* Cột Nội dung */}
+            <div className="space-y-6">
+                <div>
+                    <Title level={5} className="!text-primary !uppercase !tracking-widest !mb-2">
                         Về chúng tôi
                     </Title>
-                    <Title level={2} style={{ marginTop: 8 }}>
-                        Kiến tạo giải pháp công nghệ <br /> Đột phá tương lai
+                    <Title level={2} className="!text-3xl md:!text-4xl !mt-0 !leading-tight">
+                        Kiến tạo giải pháp công nghệ <br />
+                        <span className="text-primary">Đột phá tương lai</span>
                     </Title>
-                    <Paragraph style={{ fontSize: 16, color: '#595959', lineHeight: 1.8 }}>
+                </div>
+
+                <div className="space-y-4">
+                    <Paragraph className="!text-lg !text-gray-600 leading-relaxed">
                         BFD News không chỉ là trang tin tức, chúng tôi là đội ngũ kỹ sư phần mềm đam mê công nghệ.
-                        Sứ mệnh của chúng tôi là mang đến những giải pháp chuyển đổi số toàn diện, giúp doanh nghiệp
-                        bứt phá trong kỷ nguyên 4.0.
+                        Sứ mệnh của chúng tôi là mang đến những giải pháp chuyển đổi số toàn diện.
                     </Paragraph>
-                    <Paragraph style={{ fontSize: 16, color: '#595959', lineHeight: 1.8 }}>
+                    <Paragraph className="!text-lg !text-gray-600 leading-relaxed">
                         Với hơn 10 năm kinh nghiệm, chúng tôi tự hào là đối tác tin cậy của nhiều tập đoàn lớn.
                     </Paragraph>
-                    <Link href="/about">
-                        <Button type="default" size="large" icon={<ArrowRightOutlined />} style={{ marginTop: 16 }}>
-                            Tìm hiểu thêm
-                        </Button>
-                    </Link>
-                </Col>
-            </Row>
-        </div>
+                </div>
+
+                <Link href="/about">
+                    <Button size="large" className="!mt-4 group">
+                        Tìm hiểu thêm
+                        <ArrowRightOutlined className="group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                </Link>
+            </div>
+        </section>
     );
 }

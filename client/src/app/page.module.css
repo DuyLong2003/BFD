@@ -1,0 +1,18 @@
+/* client/src/app/page.module.css */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.section {
+    scroll-margin-top: 100px;
+}
+
+.heroSection {
+    margin-bottom: 40px;
+    margin-top: 50px;
+    background: linear-gradient(135deg, #0052CC 0%, #003EB3 100%);
+    border-radius: 16px;
+    border: none;
+}

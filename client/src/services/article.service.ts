@@ -58,6 +58,8 @@ export const articleService = {
     },
 
     getPublicArticles: (params?: { page?: number; limit?: number; category?: string }) => {
-        return axiosClient.get<any, { data: Article[], total: number }>('/articles', { params });
+        return axiosClient.get<any, { data: Article[], total: number }>('/articles', {
+            params: { ...params, status: 'Published' }
+        });
     },
 };
