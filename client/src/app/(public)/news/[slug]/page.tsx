@@ -2,7 +2,6 @@ import { articleService } from '@/services/article.service';
 import { notFound } from 'next/navigation';
 import ArticleDetail from '@/components/modules/articles/ArticleDetail';
 
-// 1. Hàm tạo Metadata cho SEO (Server Side)
 export async function generateMetadata({ params }: { params: { slug: string } }) {
     try {
         const article = await articleService.getArticleBySlug(params.slug);
@@ -16,21 +15,22 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     }
 }
 
-// 2. Component Chính (Server Side)
 export default async function ArticleDetailPage({ params }: { params: { slug: string } }) {
-    let article;
-    try {
-        article = await articleService.getArticleBySlug(params.slug);
-    } catch (error) {
-        notFound();
-    }
+    // Fetch song song cả bài viết chính và bài liên quan
+    const [article, relatedArticles] = await Promise.all([
+        articleService.getArticleBySlug(params.slug).catch(() => null),
+        articleService.getRelatedArticles(params.slug).catch(() => []),
+    ]);
 
     if (!article) notFound();
 
     return (
-        <div className="bg-gray-50 py-8">
-            <div className="container mx-auto px-4 max-w-4xl">
-                <ArticleDetail article={article} />
+        <div className="bg-gray-50 py-12 min-h-screen">
+            <div className="container mx-auto px-4">
+                <ArticleDetail
+                    article={article}
+                    relatedArticles={relatedArticles} // Truyền data xuống
+                />
             </div>
         </div>
     );

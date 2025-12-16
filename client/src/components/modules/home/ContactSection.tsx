@@ -1,6 +1,7 @@
 'use client';
 
 import { Button, Typography } from 'antd';
+import Link from 'next/link';
 
 const { Title, Paragraph } = Typography;
 
@@ -24,13 +25,15 @@ export default function ContactSection() {
                     Liên hệ ngay với chúng tôi để nhận tư vấn giải pháp công nghệ phù hợp nhất cho doanh nghiệp của bạn.
                 </Paragraph>
 
-                <Button
-                    type="primary"
-                    size="large"
-                    className="!h-12 !px-10 !text-base !bg-primary hover:!bg-blue-600 border-none shadow-xl hover:shadow-2xl transition-all"
-                >
-                    Gửi yêu cầu tư vấn
-                </Button>
+                <Link href="/contact">
+                    <Button
+                        type="primary"
+                        size="large"
+                        className="!h-12 !px-10 !text-base !bg-primary hover:!bg-blue-600 border-none shadow-xl hover:shadow-2xl transition-all"
+                    >
+                        Gửi yêu cầu tư vấn
+                    </Button>
+                </Link>
             </div>
         </div>
     );

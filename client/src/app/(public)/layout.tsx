@@ -5,7 +5,6 @@ import PublicFooter from '@/components/layout/PublicFooter';
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
     return (
-        // Layout: flex column, min height 100vh
         <div className="flex flex-col min-h-screen bg-gray-50">
             <PublicHeader />
 

@@ -1,14 +1,8 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { isValidObjectId, Model } from 'mongoose';
 import slugify from 'slugify';
-
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { Article, ArticleDocument } from './schemas/article.schema';
@@ -309,5 +303,24 @@ export class ArticlesService {
     } catch (error) {
       console.error('Error invalidating cache:', error);
     }
+  }
+
+  async findRelated(slug: string) {
+    const article = await this.articleModel.findOne({ slug });
+    if (!article) throw new NotFoundException('Bài viết không tồn tại');
+
+    const related = await this.articleModel
+      .find({
+        category: article.category,
+        _id: { $ne: article._id },
+        status: 'Published'
+      })
+      .select('title slug thumbnail createdAt')
+      .populate('category', 'name slug')
+      .sort({ createdAt: -1 })
+      .limit(3)
+      .exec();
+
+    return related;
   }
 }

@@ -68,7 +68,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
                     {dom}
                 </Link>
             )}
-            // Actions Header (Theme Switch)
+            // Actions header -> theme switch)
             actionsRender={(props) => {
                 if (props.isMobile) return [];
                 return [
@@ -82,7 +82,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
                     </div>
                 ];
             }}
-            // User Avatar & Dropdown
+            // user avatar & dropdown
             avatarProps={{
                 src: 'https://api.dicebear.com/7.x/miniavs/svg?seed=2',
                 size: 'small',

@@ -13,4 +13,10 @@ export class AppController {
   getProfile(@Request() req) {
     return req.user;
   }
+
+  @Public()
+  @Get('healthz')
+  healthCheck() {
+    return { status: 'ok', message: 'Server is running' };
+  }
 }

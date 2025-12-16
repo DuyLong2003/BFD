@@ -264,7 +264,6 @@ export default function ArticleListPage() {
                 }}
                 dateFormatter="string"
                 cardBordered={false}
-                // Thêm class cho bảng để đẹp hơn
                 tableClassName="bg-white rounded-lg shadow-sm"
                 className="ant-pro-table-custom"
             />

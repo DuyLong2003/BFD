@@ -10,7 +10,7 @@ export const fileService = {
         const formData = new FormData();
         formData.append('file', file);
 
-        // ✅ axiosClient tự động attach token từ cookie
+        // axiosClient tự động attach token từ cookie
         return axiosClient.post('/files/upload', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',

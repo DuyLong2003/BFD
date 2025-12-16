@@ -29,7 +29,6 @@ axiosClient.interceptors.response.use(
     (error) => {
         if (typeof window !== 'undefined' && error.response?.status === 401) {
             Cookies.remove('access_token');
-            // Có thể thêm: window.location.href = '/login';
         }
         return Promise.reject(error);
     }

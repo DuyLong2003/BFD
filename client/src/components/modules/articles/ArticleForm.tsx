@@ -54,7 +54,7 @@ export default function ArticleForm({ articleId, initialValues, onSuccess }: Art
         const initData = async () => {
             try {
                 const res = await categoryService.getCategories();
-                // Handle data trả về từ API (có thể là mảng hoặc object {data: []})
+                // Handle data trả về từ API
                 const catList = Array.isArray(res) ? res : (res as any).data || [];
 
                 setCategories(catList.map((c: any) => ({ label: c.name, value: c._id })));
@@ -150,7 +150,7 @@ export default function ArticleForm({ articleId, initialValues, onSuccess }: Art
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 {/* LEFT COLUMN: MAIN CONTENT */}
                 <div className="lg:col-span-3 space-y-6">
-                    <Card title="Nội dung bài viết" bordered={false} className="shadow-sm rounded-lg">
+                    <Card title="Nội dung bài viết" variant='borderless' className="shadow-sm rounded-lg">
                         <Form.Item
                             name="title"
                             label="Tiêu đề bài viết"
@@ -188,7 +188,7 @@ export default function ArticleForm({ articleId, initialValues, onSuccess }: Art
                 {/* RIGHT COLUMN: SIDEBAR ACTION */}
                 <div className="lg:col-span-1 space-y-6">
                     {/* Panel 1: Publish Action */}
-                    <Card title="Đăng bài" bordered={false} className="shadow-sm rounded-lg">
+                    <Card title="Đăng bài" variant='borderless' className="shadow-sm rounded-lg">
                         <Form.Item name="status" label="Trạng thái" className="mb-4">
                             <Select options={[
                                 { value: 'Draft', label: 'Bản nháp' },

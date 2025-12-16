@@ -11,7 +11,7 @@ export default function PublicFooter() {
         <footer className="bg-[#001529] text-white py-12 px-6">
             <div className="max-w-[1200px] mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {/* Cột 1: Thông tin công ty */}
+                    {/* Cột 1: thông tin công ty */}
                     <div>
                         <Title level={4} className="!text-white !m-0">BFD NEWS</Title>
                         <Text className="!text-white/65 block mt-4">
@@ -19,7 +19,7 @@ export default function PublicFooter() {
                         </Text>
                     </div>
 
-                    {/* Cột 2: Liên kết nhanh */}
+                    {/* Cột 2: liên kết nhanh */}
                     <div>
                         <Title level={5} className="!text-white">Liên kết</Title>
                         <div className="flex flex-col gap-2 mt-2">
@@ -29,7 +29,7 @@ export default function PublicFooter() {
                         </div>
                     </div>
 
-                    {/* Cột 3: Liên hệ */}
+                    {/* Cột 3: liên hệ */}
                     <div>
                         <Title level={5} className="!text-white">Liên hệ</Title>
                         <div className="flex flex-col gap-2 mt-2">

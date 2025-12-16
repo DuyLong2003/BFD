@@ -17,6 +17,29 @@ export class UsersService {
     private eventsGateway: EventsGateway,
   ) { }
 
+  // chạy 1 lần khi khởi động Server
+  async onModuleInit() {
+    await this.seedAdminUser();
+  }
+
+  private async seedAdminUser() {
+    const count = await this.userModel.countDocuments({ role: 'admin' });
+    if (count === 0) {
+      const defaultPassword = await bcrypt.hash('admin123', 10);
+
+      await this.userModel.create({
+        username: 'admin',
+        email: 'admin@bfd.com',
+        password: defaultPassword,
+        role: 'admin',
+        name: 'Super Admin'
+      });
+
+      console.log('SEED: Tạo thành công tài khoản Admin mặc định (admin / admin123)');
+    }
+  }
+  // ^ Kết thúc phần Seed
+
   async create(createUserDto: CreateUserDto) {
     const existUser = await this.userModel.findOne({ username: createUserDto.username });
     if (existUser) {

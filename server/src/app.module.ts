@@ -15,6 +15,8 @@ import { EventsModule } from './events/events.module';
 import { FilesModule } from './modules/files/files.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import KeyvRedis from '@keyv/redis';
+import { BullModule } from '@nestjs/bullmq';
+import { ContactsModule } from './modules/contacts/contacts.module';
 
 @Module({
   imports: [
@@ -37,6 +39,16 @@ import KeyvRedis from '@keyv/redis';
       }),
       isGlobal: true,
     }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        connection: {
+          host: configService.get('REDIS_HOST') || 'localhost',
+          port: parseInt(configService.get('REDIS_PORT') || '6379'),
+        },
+      }),
+      inject: [ConfigService],
+    }),
     UsersModule,
     CategoriesModule,
     ArticlesModule,
@@ -44,6 +56,7 @@ import KeyvRedis from '@keyv/redis';
     DashboardModule,
     EventsModule,
     FilesModule,
+    ContactsModule,
   ],
   controllers: [AppController],
   providers: [

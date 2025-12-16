@@ -5,7 +5,6 @@ export class CreateUserDto {
     @IsString()
     username: string;
 
-    // THÊM VALIDATE EMAIL
     @IsNotEmpty({ message: 'Email không được để trống' })
     @IsEmail({}, { message: 'Email không hợp lệ' })
     email: string;

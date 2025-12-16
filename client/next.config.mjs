@@ -3,7 +3,7 @@ const nextConfig = {
     reactStrictMode: false,
     transpilePackages: ['antd', '@ant-design/pro-components', '@ant-design/icons'],
     images: {
-        domains: ['localhost', 'http://localhost:8080'],
+        // domains: ['localhost', 'http://localhost:8080'],
         remotePatterns: [
             {
                 protocol: 'https',

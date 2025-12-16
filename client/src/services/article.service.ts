@@ -28,7 +28,7 @@ export interface ArticleResponse {
 }
 
 export const articleService = {
-    // ✅ Admin: Gọi với noCache=true
+    // Admin: Gọi với noCache=true
     getArticles: async (params: {
         page?: number;
         limit?: number;
@@ -42,7 +42,7 @@ export const articleService = {
         return axiosClient.get<any, ArticleResponse>('/articles', {
             params: {
                 ...params,
-                noCache: 'true', // ✅ Skip cache cho admin
+                noCache: 'true', // Skip cache cho admin
             }
         });
     },
@@ -63,7 +63,7 @@ export const articleService = {
         return axiosClient.patch(`/articles/${id}`, data);
     },
 
-    // ✅ Public: KHÔNG skip cache
+    // Public -> không skip cache
     getPublicArticles: (params?: {
         page?: number;
         limit?: number;
@@ -74,12 +74,16 @@ export const articleService = {
             params: {
                 ...params,
                 status: 'Published',
-                // ✅ Không thêm noCache → Sẽ dùng cache
+                // Không thêm noCache → dùng cache
             }
         });
     },
 
     getArticleBySlug: (slug: string) => {
         return axiosClient.get<any, Article>(`/articles/public/${slug}`);
+    },
+
+    getRelatedArticles: (slug: string) => {
+        return axiosClient.get<any, Article[]>(`/articles/public/related/${slug}`);
     }
 };
