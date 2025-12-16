@@ -9,7 +9,6 @@ import { ArticlesModule } from './modules/articles/articles.module';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/passport/jwt-auth.guard';
-import { EventsGateway } from './events/events.gateway';
 import { DashboardModule } from './modules/dashboard/dashboard.modules';
 import { EventsModule } from './events/events.module';
 import { FilesModule } from './modules/files/files.module';
@@ -17,6 +16,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import KeyvRedis from '@keyv/redis';
 import { BullModule } from '@nestjs/bullmq';
 import { ContactsModule } from './modules/contacts/contacts.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -49,6 +49,12 @@ import { ContactsModule } from './modules/contacts/contacts.module';
       }),
       inject: [ConfigService],
     }),
+
+    ThrottlerModule.forRoot([{
+      ttl: 60000, // Thời gian tính bằng mili-giây (60 giây)
+      limit: 20,  // Giới hạn tối đa 20 request trong 60 giây (Chống spam API)
+    }]),
+
     UsersModule,
     CategoriesModule,
     ArticlesModule,
@@ -64,6 +70,10 @@ import { ContactsModule } from './modules/contacts/contacts.module';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

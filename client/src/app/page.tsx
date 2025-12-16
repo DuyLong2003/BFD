@@ -7,6 +7,8 @@ import ContactSection from '@/components/modules/home/ContactSection';
 import { articleService } from '@/services/article.service';
 import styles from './page.module.css'
 
+export const revalidate = 60;
+
 async function getLatestArticles() {
   try {
     const res = await articleService.getPublicArticles({ page: 1, limit: 6 });

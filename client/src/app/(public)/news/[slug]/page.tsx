@@ -2,6 +2,13 @@ import { articleService } from '@/services/article.service';
 import { notFound } from 'next/navigation';
 import ArticleDetail from '@/components/modules/articles/ArticleDetail';
 
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+    const articles = await articleService.getPublicArticles({ limit: 100 });
+    return articles.data.map((post) => ({ slug: post.slug }));
+}
+
 export async function generateMetadata({ params }: { params: { slug: string } }) {
     try {
         const article = await articleService.getArticleBySlug(params.slug);
