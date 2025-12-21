@@ -1,10 +1,10 @@
-# 🚀 BFD Company Website & News CMS
+# BFD Company Website & News CMS
 
 > **Website giới thiệu công ty & Hệ thống quản trị tin tức (Full-Stack JS)**
 
 Dự án xây dựng website public cho công ty công nghệ BFD và hệ thống CMS quản trị nội dung mạnh mẽ. Ứng dụng được xây dựng theo kiến trúc **Monorepo**, áp dụng các công nghệ hiện đại nhất hiện nay như **Next.js App Router, NestJS, Redis Caching, Background Queue (BullMQ)** và **Real-time Socket.io**.
 
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Frontend (Client)
 
@@ -30,7 +30,7 @@ Dự án xây dựng website public cho công ty công nghệ BFD và hệ thố
 
 -----
 
-## ✨ Tính Năng Nổi Bật
+## Tính Năng Nổi Bật
 
 ### 1\. Phân hệ Public (Khách truy cập)
 
@@ -56,7 +56,7 @@ Dự án xây dựng website public cho công ty công nghệ BFD và hệ thố
 
 -----
 
-## ⚙️ Cài Đặt & Chạy Dự Án
+## Cài Đặt & Chạy Dự Án
 
 ### Yêu cầu tiên quyết (Prerequisites)
 
@@ -119,7 +119,7 @@ Nếu bạn muốn chạy code dev mà không dùng Docker cho App (chỉ dùng 
 
 -----
 
-## 🔐 Tài Khoản Mặc Định (Seed Data)
+## Tài Khoản Mặc Định (Seed Data)
 
 Hệ thống sẽ tự động tạo tài khoản Admin khi khởi động lần đầu (nếu chưa có).
 
@@ -129,7 +129,7 @@ Hệ thống sẽ tự động tạo tài khoản Admin khi khởi động lần
 
 -----
 
-## 📡 API Documentation (Ví dụ Endpoint)
+## API Documentation (Ví dụ Endpoint)
 
 Backend cung cấp API RESTful chuẩn. Dưới đây là một số endpoint chính:
 
@@ -158,7 +158,7 @@ Backend cung cấp API RESTful chuẩn. Dưới đây là một số endpoint ch
 
 -----
 
-## 📁 Cấu Trúc Thư Mục
+## Cấu Trúc Thư Mục
 
 Dự án được tổ chức theo mô hình Monorepo:
 
@@ -179,7 +179,7 @@ Dự án được tổ chức theo mô hình Monorepo:
 
 -----
 
-## 🛡️ Bảo Mật & Hiệu Năng
+## Bảo Mật & Hiệu Năng
 
 1.  **Rate Limiting:** Giới hạn 20 requests/phút để chống Spam/DDoS.
 2.  **Helmet:** Bảo vệ HTTP Headers.
