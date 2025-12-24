@@ -13,7 +13,7 @@ export default function ContactSection() {
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat -z-20 transform scale-105"
                 style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80)' }}
             />
-            <div className="absolute inset-0 bg-black/60 -z-10" />
+            <div className="absolute inset-0 bg-black/75 -z-10" />
 
             {/* Content Container */}
             <div className="py-20 px-6 flex flex-col items-center gap-6">
@@ -21,7 +21,7 @@ export default function ContactSection() {
                     Sẵn sàng hợp tác cùng BFD?
                 </Title>
 
-                <Paragraph className="!text-white/85 !text-lg max-w-xl leading-relaxed">
+                <Paragraph className="!text-gray-200 !text-lg max-w-xl leading-relaxed">
                     Liên hệ ngay với chúng tôi để nhận tư vấn giải pháp công nghệ phù hợp nhất cho doanh nghiệp của bạn.
                 </Paragraph>
 

@@ -13,15 +13,15 @@ export default function PublicFooter() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {/* Cột 1: thông tin công ty */}
                     <div>
-                        <Title level={4} className="!text-white !m-0">BFD NEWS</Title>
-                        <Text className="!text-white/65 block mt-4">
+                        <a className="!text-white !m-0 text-xl">BFD NEWS</a>
+                        <p className="text-gray-300 block mt-4 text-sm leading-relaxed">
                             Hệ thống tin tức cập nhật công nghệ nhanh nhất, chính xác nhất. Đồng hành cùng sự phát triển của bạn.
-                        </Text>
+                        </p>
                     </div>
 
                     {/* Cột 2: liên kết nhanh */}
                     <div>
-                        <Title level={5} className="!text-white">Liên kết</Title>
+                        <a className="!text-white text-xl">Liên kết</a>
                         <div className="flex flex-col gap-2 mt-2">
                             <Link href="/" className="text-white/65 hover:text-white transition-colors">Trang chủ</Link>
                             <Link href="/news" className="text-white/65 hover:text-white transition-colors">Tin tức</Link>
@@ -31,7 +31,7 @@ export default function PublicFooter() {
 
                     {/* Cột 3: liên hệ */}
                     <div>
-                        <Title level={5} className="!text-white">Liên hệ</Title>
+                        <a className="!text-white text-xl">Liên hệ</a>
                         <div className="flex flex-col gap-2 mt-2">
                             <Text className="!text-white/65">Email: contact@bfd-news.com</Text>
                             <Text className="!text-white/65">Hotline: 0987 654 321</Text>
@@ -45,8 +45,8 @@ export default function PublicFooter() {
                 </div>
 
                 {/* Copyright */}
-                <div className="border-t border-white/10 mt-8 pt-4 text-center">
-                    <Text className="!text-white/45 text-sm">
+                <div className="border-t border-gray-700 mt-10 pt-6 text-center">
+                    <Text className="text-gray-400 text-sm">
                         © 2025 BFD News. All rights reserved.
                     </Text>
                 </div>

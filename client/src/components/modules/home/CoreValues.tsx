@@ -7,22 +7,22 @@ const { Title, Paragraph } = Typography;
 
 const values = [
     {
-        icon: <RocketOutlined className="text-3xl text-[#0052CC]" />,
+        icon: <RocketOutlined className="text-3xl text-[#0041a3]" />,
         title: 'Tốc độ vượt trội',
         desc: 'Hệ thống được tối ưu hóa để mang lại trải nghiệm nhanh nhất.'
     },
     {
-        icon: <SafetyCertificateOutlined className="text-3xl text-[#52c41a]" />,
+        icon: <SafetyCertificateOutlined className="text-3xl text-[#389e0d]" />,
         title: 'Bảo mật tuyệt đối',
         desc: 'Dữ liệu được bảo vệ bởi các tiêu chuẩn an ninh mạng hàng đầu.'
     },
     {
-        icon: <BulbOutlined className="text-3xl text-[#faad14]" />,
+        icon: <BulbOutlined className="text-3xl text-[#d48806]" />,
         title: 'Sáng tạo',
         desc: 'Luôn cập nhật và áp dụng những công nghệ mới nhất.'
     },
     {
-        icon: <TeamOutlined className="text-3xl text-[#eb2f96]" />,
+        icon: <TeamOutlined className="text-3xl text-[#c41d7f]" />,
         title: 'Đội ngũ tận tâm',
         desc: 'Hỗ trợ khách hàng 24/7 với thái độ chuyên nghiệp.'
     }
@@ -33,7 +33,7 @@ export default function CoreValues() {
         <div className="py-16 my-12 bg-gray-50 rounded-2xl">
             <div className="text-center mb-12 px-4">
                 <Title level={2} className="!mb-2">Tại sao chọn BFD?</Title>
-                <Paragraph className="!text-gray-500 !text-lg">
+                <Paragraph className="!text-gray-600 !text-lg max-w-2xl mx-auto">
                     Những giá trị cốt lõi làm nên sự khác biệt
                 </Paragraph>
             </div>
@@ -49,10 +49,10 @@ export default function CoreValues() {
                         <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
                             {item.icon}
                         </div>
-                        <Title level={4} className="!text-lg !mb-2">{item.title}</Title>
-                        <Paragraph type="secondary" className="!text-sm">
+                        <h3 className="text-lg font-bold mb-2 text-gray-800">{item.title}</h3>
+                        <p className="text-sm text-gray-600">
                             {item.desc}
-                        </Paragraph>
+                        </p>
                     </Card>
                 ))}
             </div>

@@ -40,19 +40,19 @@ export default function LatestNews({ articles }: { articles: Article[] }) {
                                     {article.thumbnail ? (
                                         <Image
                                             src={article.thumbnail}
-                                            alt={article.title}
+                                            alt={`Thumbnail của bài viết: ${article.title}`}
                                             fill
                                             className="object-cover transition-transform duration-700 group-hover:scale-110"
                                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                         />
                                     ) : (
-                                        <div className="flex items-center justify-center h-full text-gray-400 bg-gray-100">
+                                        <div className="flex items-center justify-center h-full text-gray-500 bg-gray-200 font-medium">
                                             No Image
                                         </div>
                                     )}
                                     {/* Overlay Category */}
                                     <div className="absolute top-4 left-4 z-10">
-                                        <Tag className="!border-0 !bg-white/90 !backdrop-blur-md !text-primary !font-semibold !rounded-lg !px-3 !py-1 shadow-sm">
+                                        <Tag className="!border-0 !bg-white !text-blue-800 !font-bold !rounded-lg !px-3 !py-1 shadow-md">
                                             {article.category?.name || 'Tin tức'}
                                         </Tag>
                                     </div>
@@ -61,14 +61,14 @@ export default function LatestNews({ articles }: { articles: Article[] }) {
                         >
                             <div className="flex flex-col h-full justify-between">
                                 <Title
-                                    level={5}
+                                    level={4}
                                     ellipsis={{ rows: 2 }}
                                     className="!text-lg !mb-3 !font-bold group-hover:!text-primary transition-colors min-h-[56px]"
                                 >
                                     {article.title}
                                 </Title>
 
-                                <Text type="secondary" className="flex items-center gap-2 text-xs">
+                                <Text type="secondary" className="flex items-center gap-2 text-sm text-gray-600 font-medium">
                                     <ClockCircleOutlined />
                                     {dayjs(article.createdAt).format('DD/MM/YYYY')}
                                 </Text>
